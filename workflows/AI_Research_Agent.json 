@@ -1,0 +1,185 @@
+{
+  "name": "AI_Research_Agent.json",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.topic }}",
+        "options": {
+          "systemMessage": "You are an AI research assistant specialized in discovering and evaluating innovative AI project ideas.\n\nYou have access to the Tavily Search Tool to search the internet for real-world AI projects and ideas.\n\nYour task:\n1. Use the Tavily Search Tool to search for innovative AI project ideas related to the given topic\n2. Search multiple times with different queries to gather diverse ideas (e.g., \"innovative AI projects in [topic]\", \"cutting-edge [topic] AI applications\", \"AI research [topic]\")\n3. Analyze all the search results you find\n4. Select the 5 BEST and most innovative ideas based on:\n   - Originality and innovation\n   - Practical feasibility\n   - Real-world impact potential\n   - Technical sophistication\n5. Return ONLY the top 5 ideas as a clean markdown bullet list\n\nRules:\n- ALWAYS use the Tavily Search Tool to find real ideas from the internet\n- Search at least 2-3 times with different queries\n- Be thorough in your research\n- Prioritize quality over quantity\n- Return ONLY a markdown bullet list of the 5 best ideas\n- No headings, no explanations, no extra text"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        3840,
+        1296
+      ],
+      "id": "bd172527-d5dc-4480-9893-af12f70ea498",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.1-8b-instant",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        3848,
+        1520
+      ],
+      "id": "10cf7557-c06f-4fef-87be-dadb5642ed99",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "ImnNH7Vq5ETSwbzH",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "/project-ideas",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        3616,
+        1296
+      ],
+      "id": "565b8d71-f4ce-4405-8334-de45047c31e5",
+      "name": "Webhook",
+      "webhookId": "4440324f-6887-4d2f-b9ad-146f71ab9170"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "ideas",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d21753d3-dc2c-4f7b-9dbf-797a4cdd3e58",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4192,
+        1296
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "13338ee6-bbcb-43ea-a94d-27c2a26e46f1",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        4416,
+        1296
+      ]
+    },
+    {
+      "parameters": {
+        "toolDescription": "Search the internet for innovative AI project ideas and research. Returns relevant articles, papers, and examples from across the web.",
+        "method": "POST",
+        "url": "https://api.tavily.com/search",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n  {\n    \"api_key\": \"YOUR_NEW_API_KEY_HERE\",\n    \"query\": $fromAI(\"search_query\", \"The search query\"),\n    \"max_results\": 5\n  }\n}}",
+        "options": {}
+      },
+      "id": "d038d62f-39c9-4083-b0cb-d81b1c173a70",
+      "name": "Tavily Search Tool",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        3976,
+        1520
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tavily Search Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b1abcf92-b2fe-49fb-aadd-3fd739b03250",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "34e768059a35a755f699dff9485c9672d15e14c2bd2d61ebb2e1cee5698dc66c"
+  },
+  "id": "MpPU8C18WlCGMWw6",
+  "tags": []
+}
